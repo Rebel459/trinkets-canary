@@ -98,31 +98,3 @@ java {
 	sourceCompatibility = JavaVersion.VERSION_21
 	targetCompatibility = JavaVersion.VERSION_21
 }
-
-jar {
-	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}"}
-	}
-}
-
-// configure the maven publication
-publishing {
-	publications {
-		mavenJava(MavenPublication) {
-			from components.java
-		}
-	}
-	setupRepositories(repositories)
-}
-
-void setupRepositories(RepositoryHandler repositories) {
-	if (project.hasProperty("mavenUrl")) {
-		repositories.maven {
-			url project.mavenUrl
-			credentials {
-				username project.mavenUsername
-				password project.mavenPassword
-			}
-		}
-	}
-}
