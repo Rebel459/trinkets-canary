@@ -2,19 +2,18 @@ package dev.emi.trinkets;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.inventory.Slot;
 import dev.emi.trinkets.api.SlotGroup;
 import dev.emi.trinkets.api.SlotType;
 import dev.emi.trinkets.api.TrinketsApi;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.Rect2i;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.util.Identifier;
 
 public class TrinketScreenManager {
-	private static final Identifier MORE_SLOTS = Identifier.of("trinkets", "textures/gui/more_slots.png");
+	private static final Identifier MORE_SLOTS = Identifier.fromNamespaceAndPath("trinkets", "textures/gui/more_slots.png");
 	private static WeakReference<TrinketScreen> currentScreen;
 	public static Rect2i currentBounds = new Rect2i(0, 0, 0, 0);
 	public static Rect2i typeBounds = new Rect2i(0, 0, 0, 0);
@@ -104,7 +103,7 @@ public class TrinketScreenManager {
 		}
 
 		if (group == null) {
-			MinecraftClient client = MinecraftClient.getInstance();
+			Minecraft client = Minecraft.getInstance();
 			for (SlotGroup g : TrinketsApi.getPlayerSlots(client.player).values()) {
 				Rect2i r = currentScreen.trinkets$getGroupRect(g);
 				if (r.getX() < 0 && currentScreen.trinkets$isRecipeBookOpen()) {
@@ -191,14 +190,14 @@ public class TrinketScreenManager {
 		}
 	}
 
-	public static void drawGroup(DrawContext context, SlotGroup group, SlotType type) {
+	public static void drawGroup(GuiGraphics context, SlotGroup group, SlotType type) {
 		TrinketScreen currentScreen = getCurrentScreen();
 		if (currentScreen == null) {
 			return;
 		}
 
 		TrinketPlayerScreenHandler handler = currentScreen.trinkets$getHandler();
-		context.getMatrices().pushMatrix();
+		context.pose().pushMatrix();
 		Rect2i r = currentScreen.trinkets$getGroupRect(group);
 		int slotsWidth = handler.trinkets$getSlotWidth(group) + 1;
 		List<Point> slotHeights = handler.trinkets$getSlotHeights(group);
@@ -241,7 +240,7 @@ public class TrinketScreenManager {
 			}
 
 
-			// The rest of this is just to re-render a portion of the top and bottom slot borders so that corners
+			// The rest of this is just to re-submit a portion of the top and bottom slot borders so that corners
 			// between slot types on the GUI look nicer
 			for (int s = 0; s < slotHeights.size(); s++) {
 				Point slotHeight = slotHeights.get(s);
@@ -265,14 +264,14 @@ public class TrinketScreenManager {
 			drawTexture(context, MORE_SLOTS, x + 4, y + 4, 4, 4, 18, 18);
 		}
 
-		context.getMatrices().popMatrix();
+		context.pose().popMatrix();
 	}
 
-	private static void drawTexture(DrawContext context, Identifier texture, int x, int y, int u, int v, int width, int height) {
-		context.drawTexture(RenderPipelines.GUI_TEXTURED, texture,  x, y, u, v, width, height, 256, 256);
+	private static void drawTexture(GuiGraphics context, Identifier texture, int x, int y, int u, int v, int width, int height) {
+		context.blit(RenderPipelines.GUI_TEXTURED, texture,  x, y, u, v, width, height, 256, 256);
 	}
 
-	public static void drawActiveGroup(DrawContext context) {
+	public static void drawActiveGroup(GuiGraphics context) {
 		if (TrinketsClient.activeGroup != null) {
 			TrinketScreenManager.drawGroup(context, TrinketsClient.activeGroup, TrinketsClient.activeType);
 		} else if (TrinketsClient.quickMoveGroup != null) {
@@ -280,7 +279,7 @@ public class TrinketScreenManager {
 		}
 	}
 
-	public static void drawExtraGroups(DrawContext context) {
+	public static void drawExtraGroups(GuiGraphics context) {
 		TrinketScreen currentScreen = getCurrentScreen();
 		if (currentScreen == null) {
 			return;
@@ -335,7 +334,7 @@ public class TrinketScreenManager {
 
 	public static boolean isClickInsideTrinketBounds(double mouseX, double mouseY) {
 		TrinketScreen currentScreen = getCurrentScreen();
-		if (currentScreen == null || MinecraftClient.getInstance().currentScreen != currentScreen) {
+		if (currentScreen == null || Minecraft.getInstance().screen != currentScreen) {
 			return false;
 		}
 
